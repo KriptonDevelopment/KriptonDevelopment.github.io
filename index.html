@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kriptón — Addon</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--blur:28px;
+--glass-bg:rgba(255,255,255,0.09);
+--glass-border:rgba(255,255,255,0.22);
+--text:#f4f4f6;
+--muted:rgba(244,244,246,0.5);
+--accent:#e91e3e;
+--accent2:#ff6b6b;
+--bg:#09090f;
+}
+html{scroll-behavior:smooth}
+body{
+min-height:100vh;font-family:'Figtree',sans-serif;
+color:var(--text);background:var(--bg);
+overflow-x:hidden;
+}
+
+/* ── Blobs ── */
+.blob{position:fixed;border-radius:50%;filter:blur(110px);pointer-events:none;z-index:0;will-change:transform}
+.b1{width:600px;height:600px;background:radial-gradient(circle,rgba(233,30,62,.3) 0%,transparent 70%);top:-160px;left:-140px;animation:d1 16s ease-in-out infinite alternate}
+.b2{width:500px;height:500px;background:radial-gradient(circle,rgba(233,30,62,.18) 0%,transparent 70%);bottom:-120px;right:-100px;animation:d2 20s ease-in-out infinite alternate}
+.b3{width:380px;height:380px;background:radial-gradient(circle,rgba(80,10,200,.07) 0%,transparent 70%);top:50%;left:52%;animation:d3 24s ease-in-out infinite alternate}
+.b4{width:280px;height:280px;background:radial-gradient(circle,rgba(233,30,62,.1) 0%,transparent 70%);top:30%;left:10%;animation:d4 18s ease-in-out infinite alternate}
+@keyframes d1{from{transform:translate(0,0) scale(1)}to{transform:translate(90px,70px) scale(1.12)}}
+@keyframes d2{from{transform:translate(0,0) scale(1)}to{transform:translate(-70px,-90px) scale(1.1)}}
+@keyframes d3{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-42%,-58%) scale(1.14)}}
+@keyframes d4{from{transform:translate(0,0)}to{transform:translate(50px,-60px)}}
+
+/* ── Canvas ── */
+#cv{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── Sparks ── */
+.spark{position:fixed;border-radius:50%;pointer-events:none;z-index:0;animation:rise linear infinite}
+@keyframes rise{0%{transform:translateY(0) scale(1);opacity:.7}100%{transform:translateY(-100vh) scale(0);opacity:0}}
+
+/* ── Glass mixin ── */
+.glass{
+background:var(--glass-bg);
+backdrop-filter:blur(var(--blur)) saturate(200%);
+-webkit-backdrop-filter:blur(var(--blur)) saturate(200%);
+border:1px solid var(--glass-border);
+box-shadow:0 8px 40px rgba(0,0,0,.45),0 1.5px 0 rgba(255,255,255,.22) inset,0 -1px 0 rgba(255,255,255,.06) inset;
+position:relative;overflow:hidden;
+}
+.glass::before{
+content:'';position:absolute;top:0;left:8%;right:8%;height:1px;
+background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);
+pointer-events:none;z-index:1;
+}
+
+/* ── NAV ── */
+nav{
+position:fixed;top:14px;left:50%;transform:translateX(-50%);
+width:calc(100% - 40px);max-width:1080px;
+padding:13px 22px;
+display:flex;align-items:center;justify-content:space-between;
+z-index:100;border-radius:99px;
+animation:fadeDown .6s ease both;
+}
+.logo{font-size:1.3rem;font-weight:800;letter-spacing:-.03em;color:#fff}
+.logo em{font-style:normal;color:var(--accent)}
+.nav-links{display:flex;gap:2px}
+.nav-links a{
+color:var(--muted);text-decoration:none;
+font-size:.78rem;letter-spacing:.04em;
+font-family:'DM Mono',monospace;
+padding:7px 15px;border-radius:99px;
+transition:color .2s,background .2s;
+}
+.nav-links a:hover{color:#fff;background:rgba(255,255,255,.09)}
+.discord-pill{
+display:flex;align-items:center;gap:8px;
+background:rgba(255,255,255,.07);
+border:1px solid rgba(255,255,255,.15);
+border-radius:99px;padding:7px 16px;
+font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);
+text-decoration:none;
+transition:background .2s,border-color .2s,color .2s;
+}
+.discord-pill:hover{background:rgba(233,30,62,.14);border-color:rgba(233,30,62,.35);color:#fff}
+.dot-g{width:7px;height:7px;border-radius:50%;background:#3ba55d;box-shadow:0 0 8px #3ba55d;animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{box-shadow:0 0 7px #3ba55d}50%{box-shadow:0 0 18px #3ba55d,0 0 28px rgba(59,165,93,.4)}}
+
+/* ── HERO ── */
+.hero{
+min-height:100vh;display:flex;flex-direction:column;
+align-items:center;justify-content:center;
+text-align:center;padding:130px 24px 80px;
+position:relative;z-index:2;
+}
+.pill-badge{
+display:inline-flex;align-items:center;gap:7px;
+padding:6px 18px;border-radius:99px;
+font-family:'DM Mono',monospace;
+font-size:10.5px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;
+color:var(--accent);margin-bottom:28px;
+background:rgba(233,30,62,.09);border:1px solid rgba(233,30,62,.22);
+animation:fadeUp .7s ease both;
+}
+.pill-dot{width:5px;height:5px;background:var(--accent);border-radius:50%;box-shadow:0 0 7px var(--accent);animation:blink 1.8s ease-in-out infinite}
+.hero h1{
+font-size:clamp(3.8rem,9.5vw,9rem);
+font-weight:800;letter-spacing:-.04em;line-height:.92;
+animation:fadeUp .7s .08s ease both;
+}
+.hero h1 em{
+font-style:normal;
+background:linear-gradient(135deg,var(--accent),var(--accent2),#ffb3b3);
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-sub{
+margin-top:24px;font-size:1.05rem;color:var(--muted);
+max-width:420px;line-height:1.75;font-weight:400;
+animation:fadeUp .7s .16s ease both;
+}
+.hero-cta{
+margin-top:42px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+animation:fadeUp .7s .24s ease both;
+}
+.btn{
+display:inline-flex;align-items:center;gap:9px;
+padding:13px 28px;border-radius:99px;
+font-family:'Figtree',sans-serif;font-size:.88rem;font-weight:700;
+text-decoration:none;letter-spacing:.02em;
+transition:all .25s cubic-bezier(.23,1,.32,1);
+position:relative;overflow:hidden;
+}
+.btn::before{
+content:'';position:absolute;top:-50%;left:-60%;
+width:50%;height:200%;
+background:linear-gradient(105deg,transparent,rgba(255,255,255,.25),transparent);
+transform:skewX(-15deg);transition:left .5s;
+}
+.btn:hover::before{left:130%}
+.btn-red{
+background:linear-gradient(135deg,#b00020,var(--accent));
+color:#fff;
+box-shadow:0 4px 26px rgba(233,30,62,.38),0 1px 0 rgba(255,255,255,.2) inset;
+}
+.btn-red:hover{transform:translateY(-3px);box-shadow:0 8px 40px rgba(233,30,62,.55),0 1px 0 rgba(255,255,255,.25) inset}
+.btn-glass{
+background:rgba(255,255,255,.08);color:#fff;
+border:1px solid rgba(255,255,255,.2);
+backdrop-filter:blur(12px);
+box-shadow:0 1px 0 rgba(255,255,255,.14) inset;
+}
+.btn-glass:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.32);transform:translateY(-3px)}
+
+/* ── Stats pill ── */
+.stats-wrap{
+margin-top:60px;
+animation:fadeUp .7s .32s ease both;
+}
+.stats-pill{
+display:inline-flex;align-items:stretch;
+border-radius:99px;overflow:hidden;
+}
+.stat-seg{
+padding:16px 32px;text-align:center;
+border-right:1px solid rgba(255,255,255,.1);
+}
+.stat-seg:last-child{border-right:none}
+.stat-val{
+font-size:1.55rem;font-weight:800;letter-spacing:-.03em;
+font-feature-settings:'tnum';
+}
+.stat-val.red{color:var(--accent)}
+.stat-lbl{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-top:3px}
+
+/* ── Modules ── */
+.mods-section{
+padding:80px 24px 120px;
+max-width:1200px;margin:0 auto;
+position:relative;z-index:2;
+}
+.section-eyebrow{
+display:flex;align-items:center;gap:10px;
+font-family:'DM Mono',monospace;
+font-size:10px;letter-spacing:3px;text-transform:uppercase;
+color:var(--muted);margin-bottom:12px;justify-content:center;
+}
+.section-eyebrow::before,.section-eyebrow::after{
+content:'';flex:1;max-width:80px;height:1px;
+background:linear-gradient(90deg,transparent,rgba(255,255,255,.25));
+}
+.section-eyebrow::before{background:linear-gradient(270deg,transparent,rgba(255,255,255,.25))}
+.section-eyebrow .num{
+width:20px;height:20px;border-radius:6px;
+background:rgba(233,30,62,.14);color:var(--accent);
+display:flex;align-items:center;justify-content:center;
+font-size:10px;font-weight:700;border:1px solid rgba(233,30,62,.2);
+}
+.section-title{font-size:clamp(2.2rem,4vw,3.4rem);font-weight:800;letter-spacing:-.03em;text-align:center}
+.section-sub{color:var(--muted);margin-top:10px;font-size:.95rem;text-align:center}
+.mods-header{margin-bottom:52px}
+.mods-grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+gap:14px;
+}
+.mod-card{
+padding:30px 28px 26px;
+border-radius:22px;
+transition:transform .35s cubic-bezier(.23,1,.32,1),border-color .25s,background .25s,box-shadow .35s;
+}
+.mod-card::before{opacity:.65}
+.mod-card:hover{
+transform:translateY(-6px) scale(1.015);
+background:rgba(255,255,255,.13);
+border-color:rgba(255,255,255,.32);
+box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 50px rgba(233,30,62,.07);
+}
+.mod-card:hover::before{opacity:1}
+.mod-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.mod-icon{
+width:44px;height:44px;border-radius:14px;
+background:rgba(233,30,62,.11);
+border:1px solid rgba(233,30,62,.2);
+display:flex;align-items:center;justify-content:center;
+font-size:1.2rem;
+transition:background .25s,border-color .25s,transform .25s;
+}
+.mod-card:hover .mod-icon{background:rgba(233,30,62,.2);border-color:rgba(233,30,62,.4);transform:scale(1.08) rotate(-4deg)}
+.mod-num{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--muted);letter-spacing:.1em}
+.mod-name{font-size:1.08rem;font-weight:700;letter-spacing:-.02em;margin-bottom:9px}
+.mod-desc{font-size:.84rem;color:var(--muted);line-height:1.72;font-weight:400}
+.mod-footer{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
+.mod-tag{
+font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;
+color:var(--accent);background:rgba(233,30,62,.08);
+border:1px solid rgba(233,30,62,.18);
+border-radius:6px;padding:4px 10px;
+}
+.mod-arrow{color:var(--muted);font-size:.85rem;transition:transform .2s,color .2s}
+.mod-card:hover .mod-arrow{transform:translateX(5px);color:var(--accent)}
+
+/* ── Footer ── */
+.footer{
+position:relative;z-index:2;
+max-width:1200px;margin:0 auto 32px;
+padding:26px 34px;border-radius:22px;
+display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;
+}
+.footer-logo{font-weight:800;font-size:1.1rem;opacity:.5}
+.footer-links{display:flex;gap:6px}
+.footer-links a{
+color:var(--muted);text-decoration:none;
+font-family:'DM Mono',monospace;font-size:.7rem;
+padding:6px 13px;border-radius:99px;
+transition:color .2s,background .2s;
+}
+.footer-links a:hover{color:#fff;background:rgba(255,255,255,.07)}
+.footer-copy{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);opacity:.6}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translateX(-50%) translateY(-16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .75s cubic-bezier(.23,1,.32,1),transform .75s cubic-bezier(.23,1,.32,1)}
+.reveal.in{opacity:1;transform:translateY(0)}
+
+@media(max-width:700px){
+nav{top:10px;width:calc(100% - 20px);padding:11px 16px}
+.nav-links{display:none}
+.hero h1{font-size:3.4rem}
+.mods-grid{grid-template-columns:1fr}
+.stats-pill{flex-direction:column;border-radius:22px}
+.stat-seg{border-right:none;border-bottom:1px solid rgba(255,255,255,.1)}
+.stat-seg:last-child{border-bottom:none}
+.footer{padding:20px;flex-direction:column;align-items:flex-start;margin:0 12px 24px}
+}
+</style>
+</head>
+<body>
+
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+<div class="blob b3"></div>
+<div class="blob b4"></div>
+<canvas id="cv"></canvas>
+
+<nav class="glass">
+  <div class="logo">Kriptón<em>.</em></div>
+  <div class="nav-links">
+    <a href="#modules">Módulos</a>
+    <a href="https://github.com/KriptonDevelopment" target="_blank">GitHub</a>
+  </div>
+  <a href="https://discord.gg/gmW6vUP4sv" target="_blank" class="discord-pill">
+    <div class="dot-g"></div>
+    <span id="nav-online">—</span> online &nbsp;·&nbsp; <span id="nav-total">—</span>
+  </a>
+</nav>
+
+<section class="hero">
+  <div class="pill-badge">
+    <span class="pill-dot"></span>
+    Meteor Client · Fabric · 1.21.1
+  </div>
+  <h1>El Addon<br>que <em>domina</em></h1>
+  <p class="hero-sub">Addon de alto rendimiento para Meteor Client. Módulos precisos, ventaja real en cada servidor.</p>
+  <div class="hero-cta">
+    <a href="https://discord.gg/gmW6vUP4sv" target="_blank" class="btn btn-red">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+      Únete al Discord
+    </a>
+    <a href="https://github.com/KriptonDevelopment" target="_blank" class="btn btn-glass">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      GitHub
+    </a>
+  </div>
+  <div class="stats-wrap reveal">
+    <div class="stats-pill glass">
+      <div class="stat-seg">
+        <div class="stat-val red" id="s-total">—</div>
+        <div class="stat-lbl">Miembros</div>
+      </div>
+      <div class="stat-seg">
+        <div class="stat-val" id="s-online">—</div>
+        <div class="stat-lbl">Online</div>
+      </div>
+      <div class="stat-seg">
+        <div class="stat-val">13</div>
+        <div class="stat-lbl">Módulos</div>
+      </div>
+      <div class="stat-seg">
+        <div class="stat-val">1.21.6, 1.21.8, 1.21.11</div>
+        <div class="stat-lbl">Versión</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="mods-section" id="modules">
+  <div class="mods-header reveal">
+    <div class="section-eyebrow"><span class="num">◆</span> Arsenal completo</div>
+    <h2 class="section-title">Módulos</h2>
+    <p class="section-sub">Cada módulo diseñado con propósito. Sin bloat, sin fallos.</p>
+  </div>
+  <div class="mods-grid" id="grid"></div>
+</div>
+
+<footer class="glass footer">
+  <div class="footer-logo">Kriptón.</div>
+  <div class="footer-links">
+    <a href="https://discord.gg/gmW6vUP4sv" target="_blank">Discord</a>
+    <a href="https://github.com/KriptonDevelopment" target="_blank">GitHub</a>
+    <a href="#modules">Módulos</a>
+  </div>
+  <div class="footer-copy">© 2025 KriptonDevelopment</div>
+</footer>
+
+<script>
+const mods=[
+{n:"PredicativeAura",i:"⚡",t:"Combat",d:"Aura con predicción de movimiento. Calcula trayectorias futuras para garantizar cada impacto antes de que ocurra."},
+{n:"KriptonTotem",i:"🛡",t:"Survival",d:"Gestión avanzada de tótem. Re-equipa automáticamente con timing optimizado al frame para máxima supervivencia."},
+{n:"KriptonMace",i:"🔨",t:"Combat",d:"Automatización total de la maza. Explota la mecánica de caída libre para maximizar el daño con cada golpe."},
+{n:"AntiMace",i:"🔒",t:"Defense",d:"Contramedida activa frente a mazas enemigas. Detecta la caída y activa defensas en tiempo real."},
+{n:"PlayerTp",i:"📡",t:"Movement",d:"Teleportación a jugadores usando paquetes de movimiento. Rápido, silencioso y totalmente configurable."},
+{n:"AntiRomperPapoi",i:"🛡",t:"Defense",d:"Previene la rotura de cristales de end propios. Protege tu estrategia en combate PvP sin interrupciones."},
+{n:"ArrowTrajctorie",i:"🏹",t:"Utility",d:"Visualiza en tiempo real la trayectoria de flechas. Compensa gravedad y distancia para disparos perfectos."},
+{n:"BunnyHop",i:"🐇",t:"Movement",d:"Saltos continuos automáticos para maximizar velocidad horizontal. Movimiento fluido y consistente."},
+{n:"Chat Encript",i:"🔐",t:"Privacy",d:"Cifrado de mensajes entre usuarios Kriptón. Tus conversaciones son invisibles para cualquier externo."},
+{n:"CustomFov",i:"👁",t:"Visual",d:"Control total del campo de visión, independiente del FOV base. Ajuste dinámico en tiempo real."},
+{n:"DeadEffect",i:"💀",t:"Visual",d:"Efectos visuales al eliminar jugadores. Hace visible cada kill de forma espectacular y memorable."},
+{n:"DupeServer",i:"⚙",t:"Exploit",d:"Módulo de duplicación para servidores compatibles. Maximiza recursos con técnicas precisas."},
+{n:"FlyTarget",i:"🎯",t:"Combat",d:"Mantiene el targeting activo durante el vuelo. Elimina la pérdida de objetivo en combate aéreo."}
+];
+
+const grid=document.getElementById('grid');
+mods.forEach((m,i)=>{
+  const c=document.createElement('div');
+  c.className='mod-card glass reveal';
+  c.style.transitionDelay=(i%4)*55+'ms';
+  c.innerHTML=`
+    <div class="mod-top">
+      <div class="mod-icon">${m.i}</div>
+      <div class="mod-num">${String(i+1).padStart(2,'0')}</div>
+    </div>
+    <div class="mod-name">${m.n}</div>
+    <div class="mod-desc">${m.d}</div>
+    <div class="mod-footer">
+      <div class="mod-tag">${m.t}</div>
+      <div class="mod-arrow">→</div>
+    </div>`;
+  grid.appendChild(c);
+});
+
+const io=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target)}})},{threshold:.07,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+async function loadDiscord(){
+  try{
+    const r=await fetch('https://discord.com/api/v9/invites/gmW6vUP4sv?with_counts=true');
+    const d=await r.json();
+    const t=(d.approximate_member_count||0).toLocaleString();
+    const o=(d.approximate_presence_count||0).toLocaleString();
+    document.getElementById('nav-online').textContent=o;
+    document.getElementById('nav-total').textContent=t;
+    document.getElementById('s-total').textContent=t;
+    document.getElementById('s-online').textContent=o;
+  }catch{}
+}
+loadDiscord();
+
+// Canvas particles
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let W,H,pts=[];
+function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;
+  pts=Array.from({length:100},()=>({
+    x:Math.random()*W,y:Math.random()*H,
+    vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,
+    a:Math.random()*.28+.06,s:Math.random()*1.3+.3,
+    red:Math.random()>.8
+  }));
+}
+resize();window.addEventListener('resize',resize);
+(function draw(){
+  ctx.clearRect(0,0,W,H);
+  pts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.s,0,Math.PI*2);
+    ctx.fillStyle=p.red?`rgba(233,30,62,${p.a})`:`rgba(255,255,255,${p.a*.5})`;ctx.fill();
+  });
+  for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+    const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.hypot(dx,dy);
+    if(d<90){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);
+    ctx.strokeStyle=`rgba(233,30,62,${.042*(1-d/90)})`;ctx.lineWidth=.4;ctx.stroke();}
+  }
+  requestAnimationFrame(draw);
+})();
+
+// Rising sparks
+function spark(){
+  const el=document.createElement('div');el.className='spark';
+  const red=Math.random()>.55;
+  el.style.cssText=`left:${Math.random()*100}vw;bottom:0;
+    width:${Math.random()*2+1}px;height:${Math.random()*2+1}px;
+    opacity:${Math.random()*.55+.15};
+    animation-duration:${Math.random()*9+6}s;
+    animation-delay:${Math.random()*3}s;
+    background:${red?'rgba(233,30,62,.7)':'rgba(255,255,255,.3)'};
+    box-shadow:${red?'0 0 6px rgba(233,30,62,.5)':'none'};`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),(parseFloat(el.style.animationDuration)+parseFloat(el.style.animationDelay))*1000+500);
+}
+setInterval(spark,260);for(let i=0;i<20;i++)spark();
+</script>
+</body>
+</html>
