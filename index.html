@@ -1,22 +1,404 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang=\"es\">
-  <head>
-    <meta charset=\"utf-8\" />
-    <link rel=\"icon\" href=\"%PUBLIC_URL%/logo-kripton.png\" />
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
-    <meta name=\"theme-color\" content=\"#09090f\" />
-    <meta name=\"description\" content=\"Kriptón — Addon de alto rendimiento para Meteor Client. Fabric 1.21.x.\" />
-    <link rel=\"apple-touch-icon\" href=\"%PUBLIC_URL%/logo-kripton.png\" />
-    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\" />
-    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin />
-    <link
-      href=\"https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap\"
-      rel=\"stylesheet\"
-    />
-    <title>Kriptón — Addon Meteor</title>
-  </head>
-  <body>
-    <noscript>Necesitas habilitar JavaScript para ver este sitio.</noscript>
-    <div id=\"root\"></div>
-  </body>
+<head>
+<meta charset=\"UTF-8\"/>
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/>
+<meta name=\"theme-color\" content=\"#09090f\"/>
+<meta name=\"description\" content=\"Kriptón — Addon de alto rendimiento para Meteor Client. Fabric 1.21.x.\"/>
+<title>Kriptón — Addon Meteor</title>
+<link rel=\"icon\" href=\"logo-kripton.png\"/>
+<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"/>
+<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin/>
+<link href=\"https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap\" rel=\"stylesheet\"/>
+<style>
+:root{
+  --bg:#07070b;--surface:rgba(255,255,255,.04);--border:rgba(255,255,255,.08);
+  --border-strong:rgba(255,255,255,.14);--text:#f5f5f7;
+  --text-dim:rgba(245,245,247,.62);--text-mute:rgba(245,245,247,.42);
+  --accent:#e91e3e;--accent-2:#ff5468;--accent-glow:rgba(233,30,62,.45);
+  --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text);font-family:\"Geist\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;font-feature-settings:\"ss01\",\"ss02\";-webkit-font-smoothing:antialiased;scroll-behavior:smooth;overflow-x:hidden}
+body{background:radial-gradient(1100px 600px at 75% -10%,rgba(233,30,62,.18),transparent 60%),radial-gradient(900px 500px at 10% 110%,rgba(233,30,62,.12),transparent 60%),radial-gradient(700px 400px at 50% 50%,rgba(80,0,120,.06),transparent 70%),var(--bg);min-height:100vh}
+::selection{background:var(--accent);color:#fff}
+a{color:inherit;text-decoration:none}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(59,165,93,.7)}50%{box-shadow:0 0 0 6px rgba(59,165,93,0)}}
+@keyframes shine{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+@keyframes floatSlow{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-20px) scale(1.05)}}
+@keyframes rotate360{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes spark{0%{transform:translateY(0) scale(1);opacity:.8}100%{transform:translateY(-100vh) scale(0);opacity:0}}
+
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.23,1,.32,1),transform .7s cubic-bezier(.23,1,.32,1)}
+.reveal.in{opacity:1;transform:translateY(0)}
+
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,#000 0%,transparent 80%);mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,#000 0%,transparent 80%)}
+.noise{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.04;mix-blend-mode:overlay;background-image:url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.7'/></svg>\")}
+.spark{position:fixed;bottom:-10px;border-radius:50%;pointer-events:none;z-index:1;animation:spark linear infinite}
+
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.06) 0%,rgba(255,255,255,.025) 100%);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--border);border-radius:var(--radius);position:relative;box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 -1px 0 rgba(255,255,255,.02) inset,0 30px 60px -30px rgba(0,0,0,.6)}
+.glass::before{content:\"\";position:absolute;top:0;left:14%;right:14%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);pointer-events:none}
+
+/* NAV */
+.nav{position:fixed;top:16px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:1120px;z-index:90;padding:10px 14px 10px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-radius:999px;animation:fadeUp .6s ease both}
+.nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1rem;letter-spacing:-.02em}
+.nav-brand-mark{width:28px;height:28px;border-radius:8px;background:#000;border:1px solid var(--border-strong);overflow:hidden;display:grid;place-items:center}
+.nav-brand-mark img{width:100%;height:100%;object-fit:contain}
+.nav-brand-dot{color:var(--accent)}
+.nav-links{display:flex;gap:2px}
+.nav-link{font-family:\"Geist Mono\",monospace;font-size:.72rem;letter-spacing:.04em;color:var(--text-dim);padding:7px 14px;border-radius:999px;transition:color .2s,background .2s}
+.nav-link:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-discord{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--border-strong);font-family:\"Geist Mono\",monospace;font-size:.7rem;color:var(--text-dim);transition:background .2s,border-color .2s,color .2s}
+.nav-discord:hover{background:rgba(233,30,62,.12);border-color:rgba(233,30,62,.35);color:#fff}
+.nav-discord-dot{width:7px;height:7px;border-radius:50%;background:#3ba55d;animation:pulseDot 2s ease-in-out infinite}
+.nav-discord b{color:#fff;font-weight:500}
+.nav-discord .sep{opacity:.4;margin:0 2px}
+
+/* HERO */
+.hero{position:relative;z-index:3;min-height:100vh;padding:140px 24px 80px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.hero-glow{position:absolute;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(233,30,62,.28) 0%,transparent 65%);filter:blur(80px);top:8%;z-index:-1;animation:floatSlow 14s ease-in-out infinite}
+.hero-logo{width:92px;height:92px;border-radius:22px;background:#000;border:1px solid var(--border-strong);margin-bottom:28px;display:grid;place-items:center;position:relative;overflow:hidden;animation:fadeUp .7s ease both;box-shadow:0 0 60px rgba(233,30,62,.35),0 20px 40px -20px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.08) inset}
+.hero-logo img{width:78%;height:78%;object-fit:contain;filter:drop-shadow(0 4px 14px rgba(233,30,62,.5))}
+.hero-logo::after{content:\"\";position:absolute;inset:0;background:linear-gradient(135deg,transparent 30%,rgba(255,255,255,.15) 50%,transparent 70%);animation:shine 4s ease-in-out infinite}
+.hero-badge{display:inline-flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--border-strong);font-family:\"Geist Mono\",monospace;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);margin-bottom:32px;animation:fadeUp .7s .05s ease both}
+.hero-badge-tag{padding:3px 10px;border-radius:999px;background:rgba(233,30,62,.14);border:1px solid rgba(233,30,62,.32);color:var(--accent-2);font-weight:600;font-size:.62rem;letter-spacing:.1em}
+.hero-title{font-size:clamp(3rem,8.5vw,7.4rem);font-weight:600;letter-spacing:-.045em;line-height:.94;color:#fff;max-width:980px;animation:fadeUp .7s .12s ease both}
+.hero-title em{font-family:\"Instrument Serif\",serif;font-style:italic;font-weight:400;background:linear-gradient(135deg,var(--accent) 0%,var(--accent-2) 60%,#ffb3b3 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.02em}
+.hero-sub{margin-top:26px;max-width:540px;font-size:1.05rem;line-height:1.65;color:var(--text-dim);animation:fadeUp .7s .2s ease both}
+.hero-cta{margin-top:40px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;animation:fadeUp .7s .28s ease both}
+
+.btn{display:inline-flex;align-items:center;gap:9px;padding:12px 22px;border-radius:999px;font-size:.88rem;font-weight:600;position:relative;overflow:hidden;transition:transform .25s cubic-bezier(.23,1,.32,1),box-shadow .25s,background .25s,border-color .25s;cursor:pointer}
+.btn::before{content:\"\";position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-18deg);transition:left .6s}
+.btn:hover::before{left:140%}
+.btn-primary{background:linear-gradient(135deg,#b00020,var(--accent));color:#fff;border:1px solid rgba(255,100,120,.5);box-shadow:0 8px 32px -6px var(--accent-glow),0 1px 0 rgba(255,255,255,.22) inset,0 -8px 12px -8px rgba(0,0,0,.4) inset}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 44px -6px var(--accent-glow),0 1px 0 rgba(255,255,255,.28) inset}
+.btn-glass{background:rgba(255,255,255,.05);color:#fff;border:1px solid var(--border-strong);backdrop-filter:blur(12px)}
+.btn-glass:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.28);transform:translateY(-2px)}
+
+/* STATS */
+.stats-row{margin-top:64px;display:flex;justify-content:center;animation:fadeUp .7s .36s ease both}
+.stats-pill{display:inline-flex;align-items:stretch;border-radius:999px;padding:4px;background:rgba(255,255,255,.03);border:1px solid var(--border-strong);backdrop-filter:blur(18px)}
+.stat-seg{padding:14px 28px;text-align:center;position:relative;min-width:130px}
+.stat-seg+.stat-seg::before{content:\"\";position:absolute;left:0;top:22%;bottom:22%;width:1px;background:var(--border)}
+.stat-val{font-size:1.4rem;font-weight:700;letter-spacing:-.03em;color:#fff;font-feature-settings:\"tnum\"}
+.stat-val.accent{color:var(--accent)}
+.stat-val.serif{font-family:\"Instrument Serif\",serif;font-weight:400;font-size:1.55rem;font-style:italic}
+.stat-lbl{font-family:\"Geist Mono\",monospace;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-mute);margin-top:4px}
+
+/* MARQUEE */
+.marquee{position:relative;z-index:3;padding:60px 0 30px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(255,255,255,.015),rgba(255,255,255,.005));overflow:hidden}
+.marquee-label{text-align:center;font-family:\"Geist Mono\",monospace;font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--text-mute);margin-bottom:24px}
+.marquee-track{display:flex;gap:60px;animation:marquee 32s linear infinite;width:max-content}
+.marquee-item{display:inline-flex;align-items:center;gap:14px;font-size:1.6rem;font-weight:600;letter-spacing:-.03em;color:var(--text-dim);white-space:nowrap}
+.marquee-item em{font-family:\"Instrument Serif\",serif;font-style:italic;font-weight:400;color:var(--accent-2)}
+.marquee-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+/* SECTION */
+.section{position:relative;z-index:3;max-width:1180px;margin:0 auto;padding:130px 24px}
+.section-eyebrow{display:inline-flex;align-items:center;gap:10px;padding:5px 12px 5px 6px;background:rgba(255,255,255,.04);border:1px solid var(--border-strong);border-radius:999px;font-family:\"Geist Mono\",monospace;font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim)}
+.section-eyebrow-num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:999px;background:rgba(233,30,62,.14);border:1px solid rgba(233,30,62,.3);color:var(--accent);font-size:.62rem;font-weight:700}
+.section-title{margin-top:18px;font-size:clamp(2.2rem,4.4vw,3.6rem);font-weight:600;letter-spacing:-.04em;line-height:1;color:#fff;max-width:740px}
+.section-title em{font-family:\"Instrument Serif\",serif;font-style:italic;font-weight:400;color:var(--accent)}
+.section-sub{margin-top:16px;font-size:1rem;line-height:1.6;color:var(--text-dim);max-width:540px}
+
+/* FEATURES */
+.feat-grid{margin-top:64px;display:grid;grid-template-columns:1.2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:16px;min-height:540px}
+.feat-card{padding:28px;border-radius:18px;position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.23,1,.32,1),border-color .25s,background .25s}
+.feat-card:hover{transform:translateY(-4px);border-color:var(--border-strong);background:linear-gradient(180deg,rgba(255,255,255,.08) 0%,rgba(255,255,255,.03) 100%)}
+.feat-card.span-2-rows{grid-row:span 2}
+.feat-card.span-2-cols{grid-column:span 2}
+.feat-icon{width:44px;height:44px;border-radius:12px;background:rgba(233,30,62,.1);border:1px solid rgba(233,30,62,.25);display:grid;place-items:center;color:var(--accent);margin-bottom:18px}
+.feat-title{font-size:1.15rem;font-weight:600;letter-spacing:-.02em;color:#fff;margin-bottom:8px}
+.feat-desc{font-size:.88rem;line-height:1.6;color:var(--text-dim)}
+.feat-tag{position:absolute;top:22px;right:22px;font-family:\"Geist Mono\",monospace;font-size:.58rem;letter-spacing:.18em;color:var(--text-mute)}
+.feat-bg-glyph{position:absolute;bottom:-40px;right:-30px;font-family:\"Instrument Serif\",serif;font-style:italic;font-size:12rem;color:rgba(233,30,62,.06);line-height:.7;pointer-events:none;user-select:none}
+
+/* FOUNDERS */
+.founders-head{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;flex-wrap:wrap;margin-bottom:56px}
+.founders-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.founder-card{padding:38px;border-radius:22px;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;min-height:360px;transition:transform .35s cubic-bezier(.23,1,.32,1),border-color .3s}
+.founder-card:hover{transform:translateY(-6px);border-color:rgba(233,30,62,.4)}
+.founder-card::after{content:\"\";position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,var(--accent-glow),transparent 70%);bottom:-120px;right:-100px;filter:blur(40px);opacity:.5;pointer-events:none;transition:opacity .4s}
+.founder-card:hover::after{opacity:.8}
+.founder-top{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.founder-avatar{width:86px;height:86px;border-radius:24px;border:1px solid var(--border-strong);background:linear-gradient(135deg,rgba(233,30,62,.4) 0%,rgba(60,5,20,.8) 100%);display:grid;place-items:center;font-family:\"Instrument Serif\",serif;font-style:italic;font-size:2.6rem;color:#fff;position:relative;overflow:hidden;box-shadow:0 0 30px -6px var(--accent-glow),0 1px 0 rgba(255,255,255,.1) inset}
+.founder-avatar::after{content:\"\";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent 0deg,rgba(255,255,255,.1) 60deg,transparent 120deg);animation:rotate360 8s linear infinite}
+.founder-badge{font-family:\"Geist Mono\",monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);padding:5px 10px;border-radius:999px;background:rgba(233,30,62,.1);border:1px solid rgba(233,30,62,.25)}
+.founder-body{margin-top:24px}
+.founder-name{font-size:1.7rem;font-weight:600;letter-spacing:-.03em;color:#fff;margin-bottom:6px}
+.founder-role{font-family:\"Geist Mono\",monospace;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-mute)}
+.founder-desc{margin-top:22px;font-size:.92rem;line-height:1.6;color:var(--text-dim);max-width:90%}
+.founder-meta{margin-top:30px;display:flex;gap:10px;flex-wrap:wrap;position:relative;z-index:1}
+.founder-tag{font-family:\"Geist Mono\",monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--border-strong)}
+
+/* CTA */
+.cta-section{position:relative;z-index:3;max-width:1180px;margin:60px auto 130px;padding:0 24px}
+.cta-card{position:relative;padding:72px 56px;border-radius:28px;overflow:hidden;text-align:center;background:linear-gradient(180deg,rgba(233,30,62,.08) 0%,rgba(255,255,255,.02) 100%)}
+.cta-card::after{content:\"\";position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(233,30,62,.3),transparent 60%);top:-300px;left:50%;transform:translateX(-50%);filter:blur(80px);z-index:-1}
+.cta-title{font-size:clamp(2rem,4vw,3.4rem);font-weight:600;letter-spacing:-.04em;line-height:1;color:#fff;max-width:700px;margin:0 auto}
+.cta-title em{font-family:\"Instrument Serif\",serif;font-style:italic;font-weight:400;color:var(--accent)}
+.cta-sub{margin-top:18px;font-size:1rem;color:var(--text-dim);max-width:480px;margin-left:auto;margin-right:auto}
+.cta-actions{margin-top:38px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* FOOTER */
+.footer{position:relative;z-index:3;max-width:1180px;margin:0 auto;padding:48px 24px 32px;border-top:1px solid var(--border)}
+.footer-top{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;padding-bottom:40px}
+.footer-brand{display:flex;flex-direction:column;gap:14px}
+.footer-brand-row{display:flex;align-items:center;gap:12px}
+.footer-brand-mark{width:40px;height:40px;border-radius:10px;background:#000;border:1px solid var(--border-strong);overflow:hidden;display:grid;place-items:center}
+.footer-brand-mark img{width:100%;height:100%;object-fit:contain}
+.footer-brand-name{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
+.footer-brand-name em{font-style:normal;color:var(--accent)}
+.footer-brand-desc{font-size:.84rem;color:var(--text-dim);line-height:1.6;max-width:280px}
+.footer-founders-line{font-family:\"Geist Mono\",monospace;font-size:.7rem;color:var(--text-mute);letter-spacing:.04em}
+.footer-founders-line span{color:var(--accent)}
+.footer-col h4{font-family:\"Geist Mono\",monospace;font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-mute);margin-bottom:16px;font-weight:500}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.footer-col a{font-size:.86rem;color:var(--text-dim);transition:color .2s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:26px;border-top:1px solid var(--border);gap:18px;flex-wrap:wrap}
+.footer-copy{font-family:\"Geist Mono\",monospace;font-size:.68rem;color:var(--text-mute);letter-spacing:.04em}
+.footer-version{font-family:\"Geist Mono\",monospace;font-size:.68rem;color:var(--text-mute);display:inline-flex;align-items:center;gap:8px}
+.footer-version::before{content:\"\";width:6px;height:6px;border-radius:50%;background:#3ba55d;box-shadow:0 0 8px #3ba55d}
+
+@media(max-width:900px){
+  .feat-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;min-height:auto}
+  .feat-card.span-2-rows,.feat-card.span-2-cols{grid-row:auto;grid-column:auto}
+  .founders-grid{grid-template-columns:1fr}
+  .footer-top{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+  .nav-links{display:none}
+  .nav{top:10px;width:calc(100% - 20px);padding:8px 10px 8px 14px}
+  .nav-discord{font-size:.62rem;padding:6px 10px}
+  .hero{padding:120px 18px 60px}
+  .stats-pill{flex-wrap:wrap;border-radius:22px;padding:6px;gap:4px}
+  .stat-seg{min-width:45%;padding:12px}
+  .stat-seg+.stat-seg::before{display:none}
+  .section{padding:80px 18px}
+  .feat-grid{grid-template-columns:1fr}
+  .founder-card{padding:26px;min-height:auto}
+  .founder-avatar{width:64px;height:64px;font-size:1.8rem;border-radius:18px}
+  .footer-top{grid-template-columns:1fr;gap:30px}
+  .cta-card{padding:50px 24px}
+  .marquee-item{font-size:1.2rem}
+}
+</style>
+</head>
+<body>
+
+<div class=\"grid-bg\"></div>
+<div class=\"noise\"></div>
+
+<nav class=\"nav glass\">
+  <a href=\"#top\" class=\"nav-brand\">
+    <div class=\"nav-brand-mark\"><img src=\"logo-kripton.png\" alt=\"Kriptón logo\"/></div>
+    <span>Kriptón<span class=\"nav-brand-dot\">.</span></span>
+  </a>
+  <div class=\"nav-links\">
+    <a href=\"#features\" class=\"nav-link\">Features</a>
+    <a href=\"#founders\" class=\"nav-link\">Fundadores</a>
+    <a href=\"https://github.com/KriptonDevelopment\" target=\"_blank\" rel=\"noreferrer\" class=\"nav-link\">GitHub</a>
+  </div>
+  <a href=\"https://discord.gg/gmW6vUP4sv\" target=\"_blank\" rel=\"noreferrer\" class=\"nav-discord\">
+    <span class=\"nav-discord-dot\"></span>
+    <b id=\"nav-online\">—</b> online <span class=\"sep\">·</span> <b id=\"nav-total\">—</b>
+  </a>
+</nav>
+
+<section class=\"hero\" id=\"top\">
+  <div class=\"hero-glow\"></div>
+  <div class=\"hero-logo\"><img src=\"logo-kripton.png\" alt=\"Kriptón\"/></div>
+  <div class=\"hero-badge\"><span class=\"hero-badge-tag\">v2.0</span>Addon · Meteor Client · Fabric 1.21.x</div>
+  <h1 class=\"hero-title\">El addon que <em>domina</em><br/>sin pedir permiso.</h1>
+  <p class=\"hero-sub\">Kriptón es un addon de Meteor Client diseñado para PvP de élite. Cada línea de código pensada para precisión, velocidad y ventaja real en cualquier servidor.</p>
+  <div class=\"hero-cta\">
+    <a href=\"https://discord.gg/gmW6vUP4sv\" target=\"_blank\" rel=\"noreferrer\" class=\"btn btn-primary\">
+      <svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z\"/></svg>
+      Únete al Discord
+    </a>
+    <a href=\"https://github.com/KriptonDevelopment\" target=\"_blank\" rel=\"noreferrer\" class=\"btn btn-glass\">
+      <svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z\"/></svg>
+      Ver en GitHub
+    </a>
+  </div>
+  <div class=\"stats-row\">
+    <div class=\"stats-pill\">
+      <div class=\"stat-seg\"><div class=\"stat-val accent\" id=\"s-total\">—</div><div class=\"stat-lbl\">Miembros</div></div>
+      <div class=\"stat-seg\"><div class=\"stat-val\" id=\"s-online\">—</div><div class=\"stat-lbl\">Online</div></div>
+      <div class=\"stat-seg\"><div class=\"stat-val serif\">Fabric</div><div class=\"stat-lbl\">Loader</div></div>
+      <div class=\"stat-seg\"><div class=\"stat-val\">1.21.x</div><div class=\"stat-lbl\">Minecraft</div></div>
+    </div>
+  </div>
+</section>
+
+<div class=\"marquee\">
+  <div class=\"marquee-label\">Diseñado para dominar</div>
+  <div class=\"marquee-track\" id=\"marquee\"></div>
+</div>
+
+<section class=\"section\" id=\"features\">
+  <div class=\"reveal\">
+    <div class=\"section-eyebrow\"><span class=\"section-eyebrow-num\">F</span> Features</div>
+    <h2 class=\"section-title\">Diseñado para <em>ganar</em>.</h2>
+    <p class=\"section-sub\">Cinco principios fundamentales. Cero compromisos. Todo está construido para que tengas la ventaja antes de que el enemigo siquiera reaccione.</p>
+  </div>
+  <div class=\"feat-grid\" id=\"feats\"></div>
+</section>
+
+<section class=\"section\" id=\"founders\">
+  <div class=\"founders-head reveal\">
+    <div>
+      <div class=\"section-eyebrow\"><span class=\"section-eyebrow-num\">02</span> Fundadores</div>
+      <h2 class=\"section-title\">Las mentes detrás de <em>Kriptón</em>.</h2>
+    </div>
+    <p class=\"section-sub\" style=\"max-width:360px;margin-top:0\">Dos desarrolladores. Una sola obsesión: construir el addon más preciso, rápido y técnicamente brutal de la escena de Meteor.</p>
+  </div>
+  <div class=\"founders-grid\" id=\"founders-grid\"></div>
+</section>
+
+<section class=\"cta-section\">
+  <div class=\"cta-card glass reveal\">
+    <h2 class=\"cta-title\">¿Listo para <em>dominar</em>?</h2>
+    <p class=\"cta-sub\">Únete a la comunidad de Kriptón. Soporte directo, actualizaciones y ventaja antes que cualquiera.</p>
+    <div class=\"cta-actions\">
+      <a href=\"https://discord.gg/gmW6vUP4sv\" target=\"_blank\" rel=\"noreferrer\" class=\"btn btn-primary\">
+        <svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z\"/></svg>
+        Entrar al Discord
+      </a>
+      <a href=\"https://github.com/KriptonDevelopment\" target=\"_blank\" rel=\"noreferrer\" class=\"btn btn-glass\">Ver código</a>
+    </div>
+  </div>
+</section>
+
+<footer class=\"footer\">
+  <div class=\"footer-top\">
+    <div class=\"footer-brand\">
+      <div class=\"footer-brand-row\">
+        <div class=\"footer-brand-mark\"><img src=\"logo-kripton.png\" alt=\"Kriptón\"/></div>
+        <div class=\"footer-brand-name\">Kriptón<em>.</em></div>
+      </div>
+      <div class=\"footer-brand-desc\">Addon de alto rendimiento para Meteor Client. Construido con obsesión por el detalle.</div>
+      <div class=\"footer-founders-line\">Fundado por <span>Luis_Darck11</span> · <span>XMIhai_</span></div>
+    </div>
+    <div class=\"footer-col\">
+      <h4>Producto</h4>
+      <ul>
+        <li><a href=\"#features\">Features</a></li>
+        <li><a href=\"#founders\">Fundadores</a></li>
+        <li><a href=\"https://github.com/KriptonDevelopment\" target=\"_blank\" rel=\"noreferrer\">Releases</a></li>
+      </ul>
+    </div>
+    <div class=\"footer-col\">
+      <h4>Comunidad</h4>
+      <ul>
+        <li><a href=\"https://discord.gg/gmW6vUP4sv\" target=\"_blank\" rel=\"noreferrer\">Discord</a></li>
+        <li><a href=\"https://github.com/KriptonDevelopment\" target=\"_blank\" rel=\"noreferrer\">GitHub</a></li>
+      </ul>
+    </div>
+    <div class=\"footer-col\">
+      <h4>Recursos</h4>
+      <ul>
+        <li><a href=\"https://meteorclient.com\" target=\"_blank\" rel=\"noreferrer\">Meteor Client</a></li>
+        <li><a href=\"https://fabricmc.net\" target=\"_blank\" rel=\"noreferrer\">Fabric</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class=\"footer-bottom\">
+    <div class=\"footer-copy\">© 2026 KriptonDevelopment · Todos los derechos reservados</div>
+    <div class=\"footer-version\">v2.0 · estable</div>
+  </div>
+</footer>
+
+<script>
+// Marquee
+const marqueeItems=[
+  {t:\"Predicción de movimiento\"},{t:\"ventaja real\",em:true},{t:\"Anti-Mace\"},
+  {t:\"Fabric 1.21.x\"},{t:\"PvP de élite\",em:true},{t:\"Code-first\"},
+  {t:\"Chat cifrado\"},{t:\"Open source\",em:true}
+];
+const mq=document.getElementById('marquee');
+[...marqueeItems,...marqueeItems].forEach(it=>{
+  const d=document.createElement('div');d.className='marquee-item';
+  d.innerHTML=`${it.em?`<em>${it.t}</em>`:`<span>${it.t}</span>`}<span class=\"marquee-dot\"></span>`;
+  mq.appendChild(d);
+});
+
+// Features
+const feats=[
+  {icon:'<polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\"/>',tag:\"01\",title:\"Predicción al frame\",desc:\"Algoritmos que calculan trayectorias enemigas antes de que ocurran. Cada interacción ocurre en el instante correcto.\",cls:\"span-2-rows\",glyph:\"K\"},
+  {icon:'<path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"/>',tag:\"02\",title:\"Defensa activa\",desc:\"Contramedidas en tiempo real frente a mazas, totems y exploits comunes en PvP.\"},
+  {icon:'<rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"2\"/><rect x=\"9\" y=\"9\" width=\"6\" height=\"6\"/><path d=\"M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2\"/>',tag:\"03\",title:\"Bajo consumo\",desc:\"Optimizado al milisegundo. Sin lag, sin micro-stutters, sin compromiso.\"},
+  {icon:'<circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"6\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/>',tag:\"04\",title:\"Combate de élite\",desc:\"Aura predictiva, KriptonMace y FlyTarget trabajan juntos para garantizar cada golpe.\",cls:\"span-2-cols\"},
+  {icon:'<polygon points=\"12 2 2 7 12 12 22 7 12 2\"/><polyline points=\"2 17 12 22 22 17\"/><polyline points=\"2 12 12 17 22 12\"/>',tag:\"05\",title:\"Modular\",desc:\"Cada módulo es independiente. Activa solo lo que necesitas.\"}
+];
+const fg=document.getElementById('feats');
+feats.forEach((f,i)=>{
+  const c=document.createElement('div');
+  c.className=`feat-card glass reveal ${f.cls||''}`;
+  c.style.transitionDelay=(i*60)+'ms';
+  c.innerHTML=`${f.glyph?`<span class=\"feat-bg-glyph\">${f.glyph}</span>`:''}
+    <span class=\"feat-tag\">${f.tag}</span>
+    <div class=\"feat-icon\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">${f.icon}</svg></div>
+    <div class=\"feat-title\">${f.title}</div>
+    <div class=\"feat-desc\">${f.desc}</div>`;
+  fg.appendChild(c);
+});
+
+// Founders
+const founders=[
+  {initial:\"L\",name:\"Luis_Darck11\",role:\"Co-Founder · Lead Dev\",desc:\"Arquitecto del núcleo de Kriptón. Diseña la lógica predictiva y la optimización de cada módulo crítico.\",tags:[\"Combat\",\"Predictive AI\",\"Core\"]},
+  {initial:\"M\",name:\"XMIhai_\",role:\"Co-Founder · PvP Engineer\",desc:\"Especialista en mecánicas PvP de Minecraft. Define el comportamiento de los módulos para que cada interacción sea decisiva.\",tags:[\"PvP\",\"Engineering\",\"Strategy\"]}
+];
+const fgrid=document.getElementById('founders-grid');
+founders.forEach((f,i)=>{
+  const c=document.createElement('div');
+  c.className='founder-card glass reveal';
+  c.style.transitionDelay=(i*80)+'ms';
+  c.innerHTML=`<div class=\"founder-top\">
+      <div class=\"founder-avatar\">${f.initial}</div>
+      <div class=\"founder-badge\">Founder</div>
+    </div>
+    <div class=\"founder-body\">
+      <div class=\"founder-name\">${f.name}</div>
+      <div class=\"founder-role\">${f.role}</div>
+      <div class=\"founder-desc\">${f.desc}</div>
+    </div>
+    <div class=\"founder-meta\">${f.tags.map(t=>`<span class=\"founder-tag\">${t}</span>`).join('')}</div>`;
+  fgrid.appendChild(c);
+});
+
+// Reveal
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+// Discord live stats
+async function loadDiscord(){
+  try{
+    const r=await fetch('https://discord.com/api/v9/invites/gmW6vUP4sv?with_counts=true');
+    const d=await r.json();
+    const t=(d.approximate_member_count||0).toLocaleString('es-ES');
+    const o=(d.approximate_presence_count||0).toLocaleString('es-ES');
+    document.getElementById('nav-online').textContent=o;
+    document.getElementById('nav-total').textContent=t;
+    document.getElementById('s-total').textContent=t;
+    document.getElementById('s-online').textContent=o;
+  }catch(e){}
+}
+loadDiscord();setInterval(loadDiscord,60000);
+
+// Sparks
+function spawn(){
+  const el=document.createElement('div');el.className='spark';
+  const red=Math.random()>.55;const size=Math.random()*2+1;const dur=Math.random()*10+8;
+  el.style.cssText=`left:${Math.random()*100}vw;width:${size}px;height:${size}px;opacity:${Math.random()*.5+.2};animation-duration:${dur}s;background:${red?'rgba(233,30,62,.75)':'rgba(255,255,255,.35)'};box-shadow:${red?'0 0 6px rgba(233,30,62,.6)':'none'};`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),dur*1000+500);
+}
+setInterval(spawn,320);for(let i=0;i<14;i++)spawn();
+</script>
+</body>
 </html>
