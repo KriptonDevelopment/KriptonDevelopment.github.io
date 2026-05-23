@@ -1,9 +1,3 @@
-
-📋 Instrucciones de uso en GitHub Pages:
-En tu repositorio crea/reemplaza index.html con el código de abajo
-Sube también tu logo-kripton.png en la misma carpeta (raíz del repo)
-Activa GitHub Pages: Settings → Pages → branch main → /root → Save
-¡Listo! 🚀
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -312,8 +306,8 @@ const fg=document.getElementById('feats');
 feats.forEach((f,i)=>{const c=document.createElement('div');c.className=`feat-card glass reveal ${f.cls||''}`;c.style.transitionDelay=(i*60)+'ms';c.innerHTML=`${f.glyph?`<span class="feat-bg-glyph">${f.glyph}</span>`:''}<span class="feat-tag">${f.tag}</span><div class="feat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${f.icon}</svg></div><div class="feat-title">${f.title}</div><div class="feat-desc">${f.desc}</div>`;fg.appendChild(c);});
 
 const founders=[
-  {initial:"L",name:"Luis_Darck11",role:"Co-Founder · Lead Dev",desc:"Arquitecto del núcleo de Kriptón. Diseña la lógica predictiva y la optimización de cada módulo crítico.",tags:["Combat","Predictive AI","Core"]},
-  {initial:"M",name:"XMIhai_",role:"Co-Founder · PvP Engineer",desc:"Especialista en mecánicas PvP de Minecraft. Define el comportamiento de los módulos para que cada interacción sea decisiva.",tags:["PvP","Engineering","Strategy"]}
+  {initial:"L",name:"Luis_Darck11",role:"Co-Founder · Developer",desc:"Arquitecto del núcleo de Kriptón. Diseña la lógica predictiva y la optimización de cada módulo crítico.",tags:["Combat","Predictive AI","Core"]},
+  {initial:"M",name:"XMIhai_",role:"Founder · Developer",desc:"Arquitecto del núcleo de Kriptón. Diseña la lógica predictiva y la optimización de cada módulo crítico.",tags:["PvP","Engineering","Strategy"]}
 ];
 const fgrid=document.getElementById('founders-grid');
 founders.forEach((f,i)=>{const c=document.createElement('div');c.className='founder-card glass reveal';c.style.transitionDelay=(i*80)+'ms';c.innerHTML=`<div class="founder-top"><div class="founder-avatar">${f.initial}</div><div class="founder-badge">Founder</div></div><div class="founder-body"><div class="founder-name">${f.name}</div><div class="founder-role">${f.role}</div><div class="founder-desc">${f.desc}</div></div><div class="founder-meta">${f.tags.map(t=>`<span class="founder-tag">${t}</span>`).join('')}</div>`;fgrid.appendChild(c);});
